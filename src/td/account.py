@@ -9,6 +9,7 @@ from telethon.sessions.abstract import Session
 
 import logging
 
+
 # if TYPE_CHECKING:
 #     from ..opentele import *
 
@@ -140,9 +141,9 @@ class MapData(BaseObject):  # nocov
                     draftCursorsMap[peerId] = key
 
             elif (
-                (keyType == lskType.lskLegacyImages)
-                or (keyType == lskType.lskLegacyStickerImages)
-                or (keyType == lskType.lskLegacyAudios)
+                    (keyType == lskType.lskLegacyImages)
+                    or (keyType == lskType.lskLegacyStickerImages)
+                    or (keyType == lskType.lskLegacyAudios)
             ):
                 count = map.stream.readUInt32()
                 for i in range(count):
@@ -211,7 +212,9 @@ class MapData(BaseObject):  # nocov
                 archivedMasksKey = map.stream.readUInt64()
 
             else:
-                logging.warning(f"Unknown key type in encrypted map: {keyType}")
+                raise TDataReadMapDataFailed(
+                    f"Unknown key type in encrypted map: {keyType}"
+                )
 
             ExpectStreamStatus(map.stream, "Could not stream data from mapData ")
 
@@ -251,7 +254,7 @@ class MapData(BaseObject):  # nocov
             mapSize += sizeof(uint32) * 2 + len(self._draftsMap) * sizeof(uint64) * 2
         if len(self._draftCursorsMap) > 0:
             mapSize += (
-                sizeof(uint32) * 2 + len(self._draftCursorsMap) * sizeof(uint64) * 2
+                    sizeof(uint32) * 2 + len(self._draftCursorsMap) * sizeof(uint64) * 2
             )
         if self._locationsKey:
             mapSize += sizeof(uint32) + sizeof(uint64)
@@ -260,10 +263,10 @@ class MapData(BaseObject):  # nocov
         if self._recentStickersKeyOld:
             mapSize += sizeof(uint32) + sizeof(uint64)
         if (
-            self._installedStickersKey
-            or self._featuredStickersKey
-            or self._recentStickersKey
-            or self._archivedStickersKey
+                self._installedStickersKey
+                or self._featuredStickersKey
+                or self._recentStickersKey
+                or self._archivedStickersKey
         ):
             mapSize += sizeof(uint32) + 4 * sizeof(uint64)
 
@@ -310,10 +313,10 @@ class MapData(BaseObject):  # nocov
             stream.writeUInt64(self._recentStickersKeyOld)
 
         if (
-            self._installedStickersKey
-            or self._featuredStickersKey
-            or self._recentStickersKey
-            or self._archivedStickersKey
+                self._installedStickersKey
+                or self._featuredStickersKey
+                or self._recentStickersKey
+                or self._archivedStickersKey
         ):
             stream.writeUInt32(lskType.lskStickersKeys)
             stream.writeUInt64(self._installedStickersKey)
@@ -449,7 +452,8 @@ class StorageAccount(BaseObject):  # nocov
         # Intended for internal usage only
 
         # mtp = ReadEncryptedFile(ToFilePart(self.__dataNameKey), self.__basePath, self.localKey)
-        mtp = td.Storage.ReadEncryptedFile(td.Storage.ToFilePart(self.__dataNameKey), self.__baseGlobalPath, self.localKey)  # type: ignore
+        mtp = td.Storage.ReadEncryptedFile(td.Storage.ToFilePart(self.__dataNameKey), self.__baseGlobalPath,
+                                           self.localKey)  # type: ignore
 
         blockId = mtp.stream.readInt32()
 
@@ -481,7 +485,7 @@ class StorageAccount(BaseObject):  # nocov
         return td.MTP.Config(td.MTP.Environment.Production)
 
     def readMapWith(
-        self, localKey: td.AuthKey, legacyPasscode: QByteArray = QByteArray()
+            self, localKey: td.AuthKey, legacyPasscode: QByteArray = QByteArray()
     ):
         # Intended for internal usage only
         try:
@@ -609,12 +613,12 @@ class Account(BaseObject):
     kWideIdsTag: int = int(~0)
 
     def __init__(
-        self,
-        owner: td.TDesktop,
-        basePath: str = None,
-        api: Union[Type[APIData], APIData] = API.TelegramDesktop,
-        keyFile: str = None,
-        index: int = 0,
+            self,
+            owner: td.TDesktop,
+            basePath: str = None,
+            api: Union[Type[APIData], APIData] = API.TelegramDesktop,
+            keyFile: str = None,
+            index: int = 0,
     ) -> None:
         """
         Initialized a `TDesktop` account.
@@ -673,7 +677,7 @@ class Account(BaseObject):
     @api.setter
     def api(self, value) -> None:
         self.__api = value
-        if self.owner.api != self.api:
+        if id(self.owner.api) != id(self.api):
             self.owner.api = self.api
 
     @property
@@ -770,11 +774,11 @@ class Account(BaseObject):
         return self.__MtpConfig
 
     def _setMtpAuthorizationCustom(
-        self,
-        dcId: DcId,
-        userId: int,
-        mtpKeys: List[td.AuthKey],
-        mtpKeysToDestroy: List[td.AuthKey] = [],
+            self,
+            dcId: DcId,
+            userId: int,
+            mtpKeys: List[td.AuthKey],
+            mtpKeysToDestroy: List[td.AuthKey] = [],
     ):
         # Intended for internal usage only
 
@@ -861,7 +865,6 @@ class Account(BaseObject):
             return 4 + len(list) * (4 + td.AuthKey.kSize)
 
         def writeKeys(stream: QDataStream, keys: typing.List[td.AuthKey]):
-
             stream.writeInt32(len(keys))
             for key in keys:
                 stream.writeInt32(key.dcId)
@@ -885,7 +888,7 @@ class Account(BaseObject):
         self._local._writeData(baseGlobalPath, keyFile)
 
     def SaveTData(
-        self, basePath: str = None, passcode: str = None, keyFile: str = None
+            self, basePath: str = None, passcode: str = None, keyFile: str = None
     ) -> None:
         """
         Save this account to a folder
@@ -925,47 +928,47 @@ class Account(BaseObject):
 
     @typing.overload
     async def ToTelethon(
-        self,
-        session: Union[str, Session] = None,
-        flag: Type[LoginFlag] = CreateNewSession,
-        api: Union[Type[APIData], APIData] = API.TelegramDesktop,
-        password: str = None,
+            self,
+            session: Union[str, Session] = None,
+            flag: Type[LoginFlag] = CreateNewSession,
+            api: Union[Type[APIData], APIData] = API.TelegramDesktop,
+            password: str = None,
     ) -> tl.TelegramClient:
         pass
 
     @typing.overload
     async def ToTelethon(
-        self,
-        session: Union[str, Session] = None,
-        flag: Type[LoginFlag] = CreateNewSession,
-        api: Union[Type[APIData], APIData] = API.TelegramDesktop,
-        password: str = None,
-        *,
-        connection: typing.Type[Connection] = ConnectionTcpFull,
-        use_ipv6: bool = False,
-        proxy: Union[tuple, dict] = None,
-        local_addr: Union[str, tuple] = None,
-        timeout: int = 10,
-        request_retries: int = 5,
-        connection_retries: int = 5,
-        retry_delay: int = 1,
-        auto_reconnect: bool = True,
-        sequential_updates: bool = False,
-        flood_sleep_threshold: int = 60,
-        raise_last_call_error: bool = False,
-        loop: asyncio.AbstractEventLoop = None,
-        base_logger: Union[str, logging.Logger] = None,
-        receive_updates: bool = True,
+            self,
+            session: Union[str, Session] = None,
+            flag: Type[LoginFlag] = CreateNewSession,
+            api: Union[Type[APIData], APIData] = API.TelegramDesktop,
+            password: str = None,
+            *,
+            connection: typing.Type[Connection] = ConnectionTcpFull,
+            use_ipv6: bool = False,
+            proxy: Union[tuple, dict] = None,
+            local_addr: Union[str, tuple] = None,
+            timeout: int = 10,
+            request_retries: int = 5,
+            connection_retries: int = 5,
+            retry_delay: int = 1,
+            auto_reconnect: bool = True,
+            sequential_updates: bool = False,
+            flood_sleep_threshold: int = 60,
+            raise_last_call_error: bool = False,
+            loop: asyncio.AbstractEventLoop = None,
+            base_logger: Union[str, logging.Logger] = None,
+            receive_updates: bool = True,
     ) -> tl.TelegramClient:
         pass
 
     async def ToTelethon(
-        self,
-        session: Union[str, Session] = None,
-        flag: Type[LoginFlag] = CreateNewSession,
-        api: Union[Type[APIData], APIData] = API.TelegramDesktop,
-        password: str = None,
-        **kwargs,
+            self,
+            session: Union[str, Session] = None,
+            flag: Type[LoginFlag] = CreateNewSession,
+            api: Union[Type[APIData], APIData] = API.TelegramDesktop,
+            password: str = None,
+            **kwargs,
     ) -> tl.TelegramClient:
 
         Expects(
@@ -981,11 +984,11 @@ class Account(BaseObject):
 
     @staticmethod
     async def FromTelethon(
-        telethonClient: tl.TelegramClient,
-        flag: Type[LoginFlag] = CreateNewSession,
-        api: Union[Type[APIData], APIData] = API.TelegramDesktop,
-        password: str = None,
-        owner: td.TDesktop = None,
+            telethonClient: tl.TelegramClient,
+            flag: Type[LoginFlag] = CreateNewSession,
+            api: Union[Type[APIData], APIData] = API.TelegramDesktop,
+            password: str = None,
+            owner: td.TDesktop = None,
     ):
 
         Expects(
@@ -1019,12 +1022,12 @@ class Account(BaseObject):
         dcId = DcId(ss.dc_id)
         userId = copy.UserId
         authKey = td.AuthKey(authKey, td.AuthKeyType.ReadFromFile, dcId)
-        
+
         if userId == None:
             await copy.connect()
             await copy.get_me()
             userId = copy.UserId
-            
+
         newAccount = None
 
         if owner != None:
